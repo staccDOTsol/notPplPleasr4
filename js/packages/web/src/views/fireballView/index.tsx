@@ -634,7 +634,7 @@ export const FireballView = (
     const program = new anchor.Program(idl as anchor.Idl, new PublicKey("84zHEoSwTo6pb259RtmeYQ5KNStik8pib815q7reZjdx"), provider);
     
     const state: any = await program.account.fanout.fetch(new PublicKey("9i7sVv6oY3YHh1btPUFsuGGKBBt87uyBVW94mJDpRCh3"));
-    console.log(state.accountKey.toBase58())
+    console.log('hmmm' + state.accountKey.toBase58())
         const metadatas = (await programs.metadata.Metadata.findByMint (connection, new PublicKey(nft)));
         console.log('hmm')
         const metadata = metadatas.pubkey
@@ -1650,7 +1650,8 @@ All proceeds less a house stake go to the hydras that feed stacc holders...
           paddingTop: '20px',
         }}
       >
-        {Object.keys(ingredients).map((ingredient, idx) => {
+        {relevantMints.map((i, idx) => {
+let ingredient = "Burn # " + idx.toString()
           const dishIngredient = dishIngredients.find(c => c.ingredients.find(i => i === ingredient));
           const selectedMint = explicitMints[ingredient] || implicitMints[ingredient];
 
@@ -1682,7 +1683,7 @@ All proceeds less a house stake go to the hydras that feed stacc holders...
             displayMint = null;
             operation = IngredientView.add;
           }
-
+          displayMint= i
           const inBatch = changeList.find(
               c => displayMint && c.mint.equals(displayMint.mint) && c.ingredient === ingredient && c.operation === operation);
           return (
@@ -1773,7 +1774,7 @@ All proceeds less a house stake go to the hydras that feed stacc holders...
                   position="below"
                 />
                 {state && state.traitOptions.map((t: string, i: number ) => 
-                                          <div style={{
+                                          <div key={i} style={{
                                             overflow:"wrap",
                                             marginTop: "6px", 
                                             color: !displayMint ? "gray" : "white",
