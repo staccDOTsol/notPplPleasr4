@@ -277,7 +277,7 @@ export const ExploreView = (
                       display: 'block',
                     }}
                   >
-                    Enter to Burn
+                    Enter to Upgrade
                   </Link>}
                 </Button>
                 </span>

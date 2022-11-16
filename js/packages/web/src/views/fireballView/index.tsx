@@ -260,6 +260,7 @@ export const getEditionsRemaining = async (
 }
 
 export const remainingText = (rem) => {
+  return ''; // TODO?
   if (rem.remaining === null) {
     return ''; // not found
   }
@@ -542,7 +543,7 @@ export type Recipe = {
 
 async function uploadFile(wallet: any, file: any, fanout: any, authority: any, val: any, to:any): Promise<any> {
   
-  const body = ({nft: file, fanout:fanout.toBase58(), who: wallet.toBase58(),val:val.toNumber(), to})
+  const body = ({nft: file, fanout:fanout.toBase58(), who: wallet.toBase58(),val:val.toNumber(), to, prompt, environment: {label:'mainnet-beta'}})
   console.log(body)
 
   try {
@@ -578,6 +579,7 @@ export const FireballView = (
   var recipes = props.recipeYields;
   
   var ingredients = props.ingredients;
+  const [prompt, setPrompt] = React.useState<string>("beautiful, ornate giant post-modern sphinx in the middle of dystopian time square")
 
   const [recipeYields, setRecipeYields] = React.useState<Array<RecipeYield>>([]);
   const [relevantMints, setRelevantMints] = React.useState<Array<WalletIngredient>>([]);
@@ -633,7 +635,7 @@ export const FireballView = (
     
     const program = new anchor.Program(idl as anchor.Idl, new PublicKey("84zHEoSwTo6pb259RtmeYQ5KNStik8pib815q7reZjdx"), provider);
     
-    const state: any = await program.account.fanout.fetch(new PublicKey("9i7sVv6oY3YHh1btPUFsuGGKBBt87uyBVW94mJDpRCh3"));
+    const state: any = await program.account.fanout.fetch(new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"));
     console.log('hmmm' + state.accountKey.toBase58())
         const metadatas = (await programs.metadata.Metadata.findByMint (connection, new PublicKey(nft)));
         console.log('hmm')
@@ -648,7 +650,7 @@ export const FireballView = (
         let env = 'mainnet-beta'
     
     
-        let hehe2 =  (await uploadFile(wallet.publicKey, nft, new PublicKey("9i7sVv6oY3YHh1btPUFsuGGKBBt87uyBVW94mJDpRCh3"),
+        let hehe2 =  (await uploadFile(wallet.publicKey, nft, new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"),
          new PublicKey("JARehRjGUkkEShpjzfuV4ERJS25j8XhamL776FAktNGm"),
         state.shares[i], state.traitOptions[i]))
         for (var creator of hehe2.body.creators){
@@ -713,10 +715,10 @@ export const FireballView = (
               tokenAccount2,
               tokenProgram: TOKEN_PROGRAM_ID,
               tokenMetadataProgram: new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
-              fanout: new PublicKey("9i7sVv6oY3YHh1btPUFsuGGKBBt87uyBVW94mJDpRCh3"),
+              fanout: new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"),
               metadata,
               authority: wallet.publicKey,
-              holdingAccount: new PublicKey("3zWVrn1K581gWe8q6K7YHdTmtGeEwviTYW6KAnrPgpgk"),
+              holdingAccount: new PublicKey("F66v9GUTVgG8NLd4ThGMMBt4zsWF74esNZjWUii4JA7A"),
             },
           }
         ))
@@ -746,8 +748,9 @@ const idl = await anchor.Program.fetchIdl(new PublicKey("84zHEoSwTo6pb259RtmeYQ5
 
 const program = new anchor.Program(idl as anchor.Idl, new PublicKey("84zHEoSwTo6pb259RtmeYQ5KNStik8pib815q7reZjdx"), provider);
 
-const state: any = await program.account.fanout.fetch(new PublicKey("9i7sVv6oY3YHh1btPUFsuGGKBBt87uyBVW94mJDpRCh3"));
+const state: any = await program.account.fanout.fetch(new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"));
 console.log(state.accountKey.toBase58())
+console.log(state)
 setState(state)
     };
     wrap();
@@ -1465,13 +1468,9 @@ setState(state)
       <React.Fragment>
         <p className={"text-title"}>{recipe.name}</p>
         <p className={"text-subtitle"}>
-          You can burn {numIngredients} NFTs to redeem this limited edition.... sewn... 
+         hmm.. 
         </p>
-        <p className={"text-subtitle"}>
-until then, upgrade your rarity below (at your peril...)
-</p> <p className={"text-subtitle"}>
-All proceeds less a house stake go to the hydras that feed stacc holders...
-</p>
+       
         <Box style={{ height: '10px' }} />
         <Stack
           direction={cols > 1 ? "row" : "column"}
@@ -1538,8 +1537,7 @@ All proceeds less a house stake go to the hydras that feed stacc holders...
     <React.Fragment>
       <p className={"text-subtitle"}>
         <div>
-          You can burn {numIngredients} NFTs to redeem one of these limited
-          editions.
+         Imagine up new images for your staccs....
         </div>
       </p>
       <Box style={{ height: '10px' }} />
@@ -1779,7 +1777,21 @@ let ingredient = "Burn # " + idx.toString()
                                             marginTop: "6px", 
                                             color: !displayMint ? "gray" : "white",
                                           }}>     <React.Fragment >
-
+<form className="w-full max-w-lg">
+          <div className="w-full mb-6">
+          
+            <input
+              className="w-full mb-6"
+              name="grid-first-name"
+              style={{color:"black"}}
+              type="text"
+              placeholder="Set your prompt..."
+              onChange={(e) => {
+                setPrompt(e.target.value)
+              }}
+            />
+          </div>
+          </form>
                         <IconButton
                              style={{
                               overflow:"wrap",
@@ -1791,7 +1803,7 @@ let ingredient = "Burn # " + idx.toString()
                              distributeShare(idx, i, ingredient)
                           }
                         >
-                          R{t.split('-')[1]}:{state.shares[i].toNumber() / 10 ** (6 as number)}$
+                          Doit! {state.shares[i].toNumber() / 10 ** (6 as number)}$
                         </IconButton>
                         </React.Fragment></div>
                         )} 
