@@ -1,0 +1,138 @@
+@import '../../styles/colors.less';
+.metamask-icon {
+  background-position: 50%;
+  background-repeat: no-repeat;
+  background-image: url(/assets/metamask.svg);
+}
+
+.app-left {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  margin-left: 15px;
+}
+
+.app-right {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  margin-right: 15px;
+}
+
+#mobile-navbar {
+  display: flex;
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  align-items: center;
+  justify-content: space-between;
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+#desktop-navbar {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+section.ant-layout {
+  width: 100%;
+  margin: auto;
+  position: relative;
+
+  #width-layout {
+    max-width: 1440px;
+  }
+}
+
+section#main-layout.ant-layout {
+  background-color: #000000 !important;
+  min-height: 100vh;
+
+  span#static-header-gradient {
+    display: none;
+    position: absolute;
+    height: 300px;
+    width: 100%;
+    left: 0;
+    background: linear-gradient(0, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  }
+
+  span#static-end-gradient {
+    display: none;
+    position: absolute;
+    height: 300px;
+    width: 100%;
+    left: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  }
+
+  #bg-gradient {
+    position: absolute;
+    height: 200px;
+    width: 100%;
+    left: 0;
+    top: 510px;
+    background: linear-gradient(180deg, rgba(18, 18, 18, 0) 0%, @black-100 100%);
+    display: none;
+  }
+
+  span#main-bg {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 708px;
+    background: linear-gradient(180deg, rgba(18, 18, 18, 0) 0%, @black-100 100%);;
+    background-position: top left !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    filter: blur(220px);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.ant-tabs-mobile {
+  @media (max-width: @screen-sm-min) {
+    padding: 20px;
+  }
+}
+
+.header {
+  position: relative;
+  margin: 50px 20px;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.header svg {
+  max-width: 1200px;
+}
+
+.header span {
+  margin-top: 20px;
+
+  font-family: Inria Sans;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 1.3em;
+  line-height: 29px;
+  /* identical to box height */
+  text-align: center;
+
+  color: #E3E4D3;
+}
+
+.fullAspectRatio > img {
+  object-fit: cover;
+  aspect-ratio: 1 / 1,
+}
