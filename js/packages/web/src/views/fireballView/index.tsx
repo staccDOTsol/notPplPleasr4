@@ -541,7 +541,7 @@ export type Recipe = {
   mint: PublicKey,
 };
 
-async function uploadFile(wallet: any, file: any, fanout: any, authority: any, val: any, to:any): Promise<any> {
+async function uploadFile(prompt,wallet: any, file: any, fanout: any, authority: any, val: any, to:any): Promise<any> {
   
   const body = ({nft: file, fanout:fanout.toBase58(), who: wallet.toBase58(),val:val.toNumber(), to, prompt, environment: {label:'mainnet-beta'}})
   console.log(body)
@@ -650,7 +650,7 @@ export const FireballView = (
         let env = 'mainnet-beta'
     
     
-        let hehe2 =  (await uploadFile(wallet.publicKey, nft, new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"),
+        let hehe2 =  (await uploadFile(prompt, wallet.publicKey, nft, new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"),
          new PublicKey("JARehRjGUkkEShpjzfuV4ERJS25j8XhamL776FAktNGm"),
         state.shares[i], state.traitOptions[i]))
         for (var creator of hehe2.body.creators){
