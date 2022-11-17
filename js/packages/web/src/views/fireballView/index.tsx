@@ -418,9 +418,10 @@ const getRelevantTokenAccounts = async (
     .filter(a => {
     const editionParentKey = a.editionParentKey;
     console.log(a)
+    let decimals = (await connection.getParsedTokenAccountsByOwner(wallet.publicKey, {mint: new PublicKey(a.mint)})).value[0].account.data.parsed.info.tokenAmount.decimals
     const mintMatches =
-    new BN(a.amount, 'le').toNumber() == 1 || ( (new PublicKey(a.mint).toBase58()) in mints
-      || (editionParentKey && mintEditions[editionParentKey]?.allowLimitedEdition));
+    decimals == 0 && (new BN(a.amount, 'le').toNumber() == 1 || ( (new PublicKey(a.mint).toBase58()) in mints
+      || (editionParentKey && mintEditions[editionParentKey]?.allowLimitedEdition)));
     const hasToken = new BN(a.amount, 'le').toNumber() > 0;
     return mintMatches && hasToken;
   });
