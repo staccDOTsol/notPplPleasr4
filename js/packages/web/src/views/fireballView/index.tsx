@@ -315,7 +315,7 @@ const getOnChainIngredients = async (
 console.log(ingredientList)
   const storeAccounts = await (connection as any).getMultipleAccountsInfo(storeKeys.map(s => s[0]));
 
-  const mints = {};
+  let mints = {};
   for (let idx = 0; idx < ingredientList.length; ++idx) {
     const group = ingredientList[idx];
     const storeAccount = storeAccounts[idx];
@@ -328,6 +328,7 @@ console.log(ingredientList)
       mints[mint].push(group.ingredient);
     }
   }
+  mints = {}
   console.log(mints);
   const ingredientImages = await fetchMintsAndImages(
       connection, Object.keys(mints).map(r => new PublicKey(r)));
@@ -342,7 +343,7 @@ const getRelevantTokenAccounts = async (
   walletKey : PublicKey,
   ingredientList : Array<any>,
 ): Promise<Array<WalletIngredient>> => {
-  const mints = {};
+  let mints = {};
   let hasLimitedEdition = false;
   for (const group of ingredientList)
     for (const [idx, mint] of group.mints.entries()) {
@@ -358,6 +359,7 @@ const getRelevantTokenAccounts = async (
 
       hasLimitedEdition = hasLimitedEdition || ingredientLimitedEdition;
     }
+    mints = {}
 
   const owned = await connection.getTokenAccountsByOwner(
       walletKey,
