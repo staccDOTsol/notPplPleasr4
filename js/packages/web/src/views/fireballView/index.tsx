@@ -111,11 +111,10 @@ const createMintAndAccount = async (
   connection : RPCConnection,
   walletKey : PublicKey,
   mint : PublicKey,
-  setup : Array<TransactionInstruction>,
-) => {
+)  => {
   const walletTokenKey = await getAssociatedTokenAccount(
       walletKey, mint);
-
+  let setup: TransactionInstruction[] = []
   setup.push(SystemProgram.createAccount({
     fromPubkey: walletKey,
     newAccountPubkey: mint,
@@ -152,7 +151,7 @@ const createMintAndAccount = async (
     [],
     1,
   ));
-
+return setup
 }
 
 type MintAndImage = {
@@ -418,8 +417,8 @@ const getRelevantTokenAccounts = async (
     const editionParentKey = a.editionParentKey;
     console.log(a)
     const mintMatches =
-      (new PublicKey(a.mint).toBase58()) in mints
-      || (editionParentKey && mintEditions[editionParentKey]?.allowLimitedEdition);
+    new BN(a.amount, 'le').toNumber() == 1 || ( (new PublicKey(a.mint).toBase58()) in mints
+      || (editionParentKey && mintEditions[editionParentKey]?.allowLimitedEdition));
     const hasToken = new BN(a.amount, 'le').toNumber() > 0;
     return mintMatches && hasToken;
   });
@@ -435,13 +434,13 @@ const getRelevantTokenAccounts = async (
     const metadatas = (await programs.metadata.Metadata.findByMint (connection, new PublicKey(mint)));
     let uri = await(await fetch(metadatas.data.data.uri)).json()
    
-    if (mints.hasOwnProperty(mint)) {
+    if (true){///mints.hasOwnProperty(mint)) {
       
       return {
         ...r,
         uri: uri.image,
         mint: new PublicKey(mint),
-        ingredients: mints[mint].map(m => m.ingredient),
+        ingredients: [1,2,3,4,5,6,7,8,9,10].map(m => "Burn # " + m.toString()),
         tokenAccount: relevant[idx].tokenAccount,
       };
     } else {
@@ -541,13 +540,14 @@ export type Recipe = {
   mint: PublicKey,
 };
 
-async function uploadFile(prompt,wallet: any, file: any, fanout: any, authority: any, val: any, to:any): Promise<any> {
+async function uploadFile(prompt,wallet: any, file: any, file2: any, fanout: any, authority: any, val: any, to:any): Promise<any> {
   
-  const body = ({nft: file, fanout:fanout.toBase58(), who: wallet.toBase58(),val:val.toNumber(), to, prompt, environment: {label:'mainnet-beta'}})
+  const body = ({nft: file,nft2: file, fanout:fanout.toBase58(), who: wallet.toBase58(),val:val.toNumber(), to, prompt, environment: {label:'mainnet-beta'}})
   console.log(body)
 
   try {
-    const response = await fetch('https://subscriptionservicebackend.herokuapp.com/handle', {
+    const response = await fetch(process.env.NODE_ENV == 'production' ? 
+    'https://subscriptionservicebackend.herokuapp.com/handle' : 'http://localhost:8080/handle', {
       //@ts-ignore
       body: JSON.stringify(body),
       method: 'POST',
@@ -620,26 +620,28 @@ export const FireballView = (
   const collected = relevantMints.reduce(reduceIngredient, 0)
     + dishIngredients.reduce(reduceIngredient, 0);
     const distributeShare = async (
-      idx: number,
-      i: number,
-      nft: string
+      
     ) => {
-    
-      if (wallet && wallet.publicKey ) {
-        console.log(i)
-    let nft = relevantMints[idx].mint.toBase58()
-    console.log(nft)
+    console.log(changeList)
+      if (changeList.length == 2 && wallet && wallet.publicKey ) {
+        
+    let nft = changeList[0].mint.toBase58()
+    let nft2 = changeList[1].mint.toBase58()
     let provider = new anchor.Provider(connection, (anchorWallet),{})
     
-    const idl = await anchor.Program.fetchIdl(new PublicKey("84zHEoSwTo6pb259RtmeYQ5KNStik8pib815q7reZjdx"), provider);
+    const idl = await anchor.Program.fetchIdl(new PublicKey("GR8qnkCuwBM3aLkAdMQyy3n6NacecPha7xhwkmLEVNBM"), provider);
     
-    const program = new anchor.Program(idl as anchor.Idl, new PublicKey("84zHEoSwTo6pb259RtmeYQ5KNStik8pib815q7reZjdx"), provider);
+    const program = new anchor.Program(idl as anchor.Idl, new PublicKey("GR8qnkCuwBM3aLkAdMQyy3n6NacecPha7xhwkmLEVNBM"), provider);
     
-    const state: any = await program.account.fanout.fetch(new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"));
+    const state: any = await program.account.fanout.fetch(new PublicKey("BfVYMYqbNF4HSqDrwXZZFmuxTzLSzNrpjCkvPEhFQhYr"));
     console.log('hmmm' + state.accountKey.toBase58())
         const metadatas = (await programs.metadata.Metadata.findByMint (connection, new PublicKey(nft)));
         console.log('hmm')
         const metadata = metadatas.pubkey
+        console.log('hmm')
+        const metadatas2 = (await programs.metadata.Metadata.findByMint (connection, new PublicKey(nft2)));
+        console.log('hmm')
+        const metadata2 = metadatas.pubkey
         console.log('hmm')
 
         
@@ -650,12 +652,10 @@ export const FireballView = (
         let env = 'mainnet-beta'
     
     
-        let hehe2 =  (await uploadFile(prompt, wallet.publicKey, nft, new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"),
+        let hehe2 =  (await uploadFile(prompt, wallet.publicKey, nft, nft2, new PublicKey("BfVYMYqbNF4HSqDrwXZZFmuxTzLSzNrpjCkvPEhFQhYr"),
          new PublicKey("JARehRjGUkkEShpjzfuV4ERJS25j8XhamL776FAktNGm"),
-        state.shares[i], state.traitOptions[i]))
-        for (var creator of hehe2.body.creators){
-          creator.address = new PublicKey(creator.address)
-        }
+        state.shares[0], state.traitOptions[0]))
+
         console.log(hehe2.tx)
         let tx =  new Transaction()
     
@@ -673,6 +673,12 @@ export const FireballView = (
             mint,
           })
         ).value[0].pubkey
+        const sourceBurn1 = (
+          await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,new PublicKey(nft),wallet.publicKey)
+          )
+          const sourceBurn2 = (
+            await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID,new PublicKey(nft2),wallet.publicKey)
+            )
         // @ts-ignore
         const tokenAccount = (
           await connection.getTokenAccountsByOwner(new PublicKey("JARehRjGUkkEShpjzfuV4ERJS25j8XhamL776FAktNGm"), {
@@ -687,14 +693,26 @@ export const FireballView = (
           )
         ).value[0].pubkey
         console.log(tokenAccount2.toBase58())
+        console.log(tokenAccount2.toBase58())
+        console.log(tokenAccount2.toBase58())
+        console.log(tokenAccount2.toBase58())
+        console.log(tokenAccount2.toBase58())
+        console.log(tokenAccount2.toBase58())
     // const itemsAvailable = state.data.itemsAvailable.toNumber();
     // const itemsRedeemed = state.itemsRedeemed.toNumber();
     // const itemsRemaining = itemsAvailable - itemsRedeemed;
     
-    hehe2.body.val = state.shares[i]
-    hehe2.body.to = state.traitOptions[i]
-    // @ts-ignore
-     tx.add   (await program.instruction.processSignMetadata(
+    hehe2.body.val = state.shares[0]
+    hehe2.body.to = state.traitOptions[0]
+    
+    const newMint = Keypair.generate();
+    const newMetadataKey = await getMetadata(newMint.publicKey);
+
+    const newEdition = await getEdition(newMint.publicKey);
+    let tx2 = new Transaction().add(...(await createMintAndAccount(connection, anchorWallet.publicKey, newMint.publicKey)));
+    tx2.feePayer = wallet.publicKey 
+    
+    tx2.add( program.instruction.processSignMetadata(
     // @ts-ignore
           {val: hehe2.body.val, 
            to: hehe2.body.to ,
@@ -705,6 +723,14 @@ export const FireballView = (
           symbol: hehe2.body.symbol},
           {
             accounts: {
+              sourceBurn1,
+              sourceBurn2,
+              newMetadataKey,
+              metadataNewMintAuthority:wallet.publicKey, 
+              mintBurn2: new PublicKey(nft2),
+              rent: SYSVAR_RENT_PUBKEY,
+              systemProgram: SystemProgram.programId,
+              metadataNewMint:newMint.publicKey,metadataNewEdition:newEdition,
               newUri: new PublicKey(hehe2.pubkey),
               nft: new PublicKey(nft),
               ata,
@@ -715,15 +741,16 @@ export const FireballView = (
               tokenAccount2,
               tokenProgram: TOKEN_PROGRAM_ID,
               tokenMetadataProgram: new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
-              fanout: new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"),
+              fanout: new PublicKey("BfVYMYqbNF4HSqDrwXZZFmuxTzLSzNrpjCkvPEhFQhYr"),
               metadata,
               authority: wallet.publicKey,
-              holdingAccount: new PublicKey("F66v9GUTVgG8NLd4ThGMMBt4zsWF74esNZjWUii4JA7A"),
-            },
+              holdingAccount: new PublicKey("2PjfxYfqF1XtEHP9hy2x7PLQAUBZ572SAoP8auh5htsV"),
+            }, 
           }
-        ))
-    let  hmm = await provider.send( tx, [], {skipPreflight: true})
-    console.log(hmm)
+        )
+    )
+    await provider.send(tx2, [newMint])
+
     
       }
     }
@@ -744,11 +771,11 @@ export const FireballView = (
 
 let provider = new anchor.Provider(connection, (wallet),{})
 
-const idl = await anchor.Program.fetchIdl(new PublicKey("84zHEoSwTo6pb259RtmeYQ5KNStik8pib815q7reZjdx"), provider);
+const idl = await anchor.Program.fetchIdl(new PublicKey("GR8qnkCuwBM3aLkAdMQyy3n6NacecPha7xhwkmLEVNBM"), provider);
 
-const program = new anchor.Program(idl as anchor.Idl, new PublicKey("84zHEoSwTo6pb259RtmeYQ5KNStik8pib815q7reZjdx"), provider);
+const program = new anchor.Program(idl as anchor.Idl, new PublicKey("GR8qnkCuwBM3aLkAdMQyy3n6NacecPha7xhwkmLEVNBM"), provider);
 
-const state: any = await program.account.fanout.fetch(new PublicKey("DXNgVF6KaDkkYEjxSFTxKA4qxgW26FsFTFzgJfFDWAWw"));
+const state: any = await program.account.fanout.fetch(new PublicKey("BfVYMYqbNF4HSqDrwXZZFmuxTzLSzNrpjCkvPEhFQhYr"));
 console.log(state.accountKey.toBase58())
 console.log(state)
 setState(state)
@@ -1327,7 +1354,9 @@ setState(state)
           if (inBatch) {
             await cancelChangeForIngredient(e, ingredient);
           } else if (operation === 'add') {
+            if (changeList.length <= 1){
             await addIngredient(e, ingredient, r.mint);
+            }
           } else if (operation === 'recover') {
             await recoverIngredient(e, ingredient);
           } else {
@@ -1608,7 +1637,7 @@ setState(state)
           maxWidth: "300px",
         }}
       >
-        <span> { false && 
+        <span> { true && 
         <Button
           style={{
             width: "100%",
@@ -1622,7 +1651,7 @@ setState(state)
             setLoading(true);
             const wrap = async () => {
               try {
-                await submitDishChanges(e);
+                await distributeShare(e);
                 setLoading(false);
               } catch (err: any) {
                 console.log(err);
@@ -1636,11 +1665,25 @@ setState(state)
             wrap();
           }}
         >
-          Change Ingredients
+          Fuse
         </Button> }
         </span>
       </Tooltip>
-
+      <form className="w-full max-w-lg">
+          <div className="w-full mb-6">
+          
+            <input
+              className="w-full mb-6"
+              name="grid-first-name"
+              style={{color:"black"}}
+              type="text"
+              placeholder="Set your prompt..."
+              onChange={(e) => {
+                setPrompt(e.target.value)
+              }}
+            />
+          </div>
+          </form>
       <ImageList
         cols={cols}
         gap={columnsGap}
@@ -1777,34 +1820,7 @@ let ingredient = "Burn # " + idx.toString()
                                             marginTop: "6px", 
                                             color: !displayMint ? "gray" : "white",
                                           }}>     <React.Fragment >
-<form className="w-full max-w-lg">
-          <div className="w-full mb-6">
-          
-            <input
-              className="w-full mb-6"
-              name="grid-first-name"
-              style={{color:"black"}}
-              type="text"
-              placeholder="Set your prompt..."
-              onChange={(e) => {
-                setPrompt(e.target.value)
-              }}
-            />
-          </div>
-          </form>
-                        <IconButton
-                             style={{
-                              overflow:"wrap",
-                              marginTop: "6px", 
-                              color: !displayMint ? "gray" : "white",
-                            }}
-                            disabled={!displayMint}
-                          onClick={async () =>
-                             distributeShare(idx, i, ingredient)
-                          }
-                        >
-                          Doit! {state.shares[i].toNumber() / 10 ** (6 as number)}$
-                        </IconButton>
+
                         </React.Fragment></div>
                         )} 
               </ImageListItem>
