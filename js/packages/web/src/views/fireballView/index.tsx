@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 import React from "react";
 import { RouteComponentProps, } from "react-router-dom";
 import queryString from 'query-string';
@@ -415,10 +414,11 @@ const getRelevantTokenAccounts = async (
       tokenAccount: owned.value[idx].pubkey,
       editionParentKey: editionParentKeys[idx],
     }))
-    .filter(a => {
+    .filter(async(a) => {
     const editionParentKey = a.editionParentKey;
     console.log(a)
-    let decimals = (await connection.getParsedTokenAccountsByOwner(wallet.publicKey, {mint: new PublicKey(a.mint)})).value[0].account.data.parsed.info.tokenAmount.decimals
+    
+    let decimals = (await connection.getParsedTokenAccountsByOwner(walletKey, {mint: new PublicKey(a.mint)})).value[0].account.data.parsed.info.tokenAmount.decimals
     const mintMatches =
     decimals == 0 && (new BN(a.amount, 'le').toNumber() == 1 || ( (new PublicKey(a.mint).toBase58()) in mints
       || (editionParentKey && mintEditions[editionParentKey]?.allowLimitedEdition)));
