@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React from "react";
 import { RouteComponentProps, } from "react-router-dom";
 import queryString from 'query-string';
@@ -1221,7 +1223,7 @@ setState(state)
     const masterEdition = await getEdition(masterMintKey);
 
     const setup : Array<TransactionInstruction> = [];
-    await createMintAndAccount(connection, anchorWallet.publicKey, newMint.publicKey, setup);
+    await createMintAndAccount(connection, anchorWallet.publicKey, newMint.publicKey);
 
     const masterEditionAccount = await connection.getAccountInfo(masterEdition);
     if (masterEditionAccount === null) {
