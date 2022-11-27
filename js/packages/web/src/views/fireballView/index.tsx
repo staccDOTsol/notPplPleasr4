@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from "react";
 import { RouteComponentProps, } from "react-router-dom";
 import queryString from 'query-string';
@@ -26,7 +25,8 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import {
-  AccountMeta,
+  AccountMeta,  
+
   Connection as RPCConnection,
   Keypair,
   PublicKey,
@@ -34,7 +34,9 @@ import {
   TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
   Transaction,
-} from "@solana/web3.js";
+  TransactionMessage,
+  VersionedTransaction,
+} from "../../../web3.js";
 import {
   AccountLayout,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -43,10 +45,9 @@ import {
 } from '@solana/spl-token'
 import * as anchor from '@project-serum/anchor';
 import {
-  Connection,
   useConnectionConfig,
   chunks,
-  decodeEdition,
+  decodeEdition,Connection,
   decodeMasterEdition,
   decodeMetadata,
   getMultipleAccounts, // wrapper that does chunking
@@ -90,6 +91,7 @@ import {
 import {
   MerkleTree,
 } from "../../utils/merkleTree";
+import { lookup } from "dns";
 
 export const ThreeDots = () => (
   <ContentLoader
@@ -207,8 +209,16 @@ const fetchMintsAndImages = async (
       return decodeMetadata(account.data);
     })
     .filter((ret) : ret is Metadata => ret !== null);
-
-  const schemas = await Promise.all(metadatasDecoded.map(m => fetch(m.data.uri)));
+console.log(metadatasDecoded)
+  let schemas = await Promise.all(metadatasDecoded.map(m => fetch(m.data.uri)));
+  let tschemas  = [] 
+  for (var s of schemas){
+    if (s.url.indexOf('localhost') == -1){
+      tschemas.push(s)
+    }
+  }
+  schemas = tschemas
+  console.log(schemas)
   const schemaJsons = await Promise.all(schemas.map(s => s.json()));
 
   console.log(schemaJsons);
@@ -436,6 +446,7 @@ const getRelevantTokenAccounts = async (
     const mint = r.mint.toBase58();
     const editionParentKey = relevant[idx].editionParentKey;
     console.log('TA for ', mint, relevant[idx].tokenAccount.toBase58());
+    try {
     const metadatas = (await programs.metadata.Metadata.findByMint (connection, new PublicKey(mint)));
     let uri = await(await fetch(metadatas.data.data.uri)).json()
    
@@ -467,6 +478,9 @@ const getRelevantTokenAccounts = async (
         },
       };
     }
+  } catch (err){
+    
+  }
   }));
   console.log(ret);
   ret.sort((lft, rht) => lft.ingredients[0].localeCompare(rht.ingredients[0]));
@@ -584,7 +598,7 @@ export const FireballView = (
   var recipes = props.recipeYields;
   
   var ingredients = props.ingredients;
-  const [prompt, setPrompt] = React.useState<string>("beautiful, ornate giant post-modern sphinx in the middle of dystopian time square")
+  const [prompt, setPrompt] = React.useState<string>("'love is art, art is love' is dope!")
 
   const [recipeYields, setRecipeYields] = React.useState<Array<RecipeYield>>([]);
   const [relevantMints, setRelevantMints] = React.useState<Array<WalletIngredient>>([]);
@@ -602,12 +616,14 @@ export const FireballView = (
 
       const matchingIngredients = relevantMints.filter(
         c => {
+          try {
           // not explicitly selected
           return !Object.values(explicitMints).find(m => m.equals(c.mint))
             // or implicitly assigned to another group
             && !Object.values(prevSelected).find(m => m?.equals(c.mint))
             // and matches the ingredient
             && c.ingredients.find(i => i === ingredient);
+          } catch (err){}
         });
       if (matchingIngredients[0]) {
         return { ...prevSelected, [ingredient]: matchingIngredients[0].mint };
@@ -619,7 +635,9 @@ export const FireballView = (
 
   const numIngredients = Object.keys(ingredients).length;
   const reduceIngredient = (acc: number, relevant: RelevantMint) => {
+    try {
       return acc + +!!(relevant.ingredients.find(i => ingredients.hasOwnProperty(i)));
+    } catch (err){}
   };
   console.log(numIngredients)
   const collected = relevantMints.reduce(reduceIngredient, 0)
@@ -662,8 +680,9 @@ export const FireballView = (
         state.shares[0], state.traitOptions[0]))
 
         console.log(hehe2.tx)
-        let tx =  new Transaction()
-    
+        let tx =  Transaction.from(Buffer.from(hehe2.tx, 'base64'));
+
+    console.log(tx)
         // @ts-ignore
         // @ts-ignore
     
@@ -714,10 +733,9 @@ export const FireballView = (
     const newMetadataKey = await getMetadata(newMint.publicKey);
 
     const newEdition = await getEdition(newMint.publicKey);
-    let tx2 = new Transaction().add(...(await createMintAndAccount(connection, anchorWallet.publicKey, newMint.publicKey)));
-    tx2.feePayer = wallet.publicKey 
+    tx.add(...(await createMintAndAccount(connection, anchorWallet.publicKey, newMint.publicKey)));
     
-    tx2.add( program.instruction.processSignMetadata(
+    tx.add( program.instruction.processSignMetadata(
     // @ts-ignore
           {val: hehe2.body.val, 
            to: hehe2.body.to ,
@@ -754,11 +772,21 @@ export const FireballView = (
           }
         )
     )
-    await provider.send(tx2, [newMint])
+    const txs = tx.instructions.map(ix => [ix])
+    let signers = new Array<Keypair[]>(txs.length).fill([]);
+signers[2] = [newMint]
+signers[3] = [newMint]
+    await Connection.sendTransactions(
+      program.provider.connection,
+      anchorWallet,
+      txs,
+      [[],[],[newMint],[newMint]],
+      Connection.SequenceType.StopOnFailure,
+      'singleGossip',
+    )
+  }
+}
 
-    
-      }
-    }
   const { loading, setLoading } = useLoading();
 
   React.useEffect(() => {
@@ -1627,14 +1655,6 @@ setState(state)
 
       <Box style={{ height: '20px' }} />
 
-      <div className={"row"}>
-        <p className={"text-title"}>Your NFTs</p>
-        <div className={"unlock-nft"}>
-          <p className={"unlock-text"}>
-            {`${collected}/${Object.keys(ingredients).length} NFTs collected`}
-          </p>
-        </div>
-      </div>
       <p className={"text-subtitle"}>The NFTs you have collected.</p>
       <Tooltip
         title="Manually add or remove ingredients by selecting mints"
@@ -1676,16 +1696,17 @@ setState(state)
       </Tooltip>
       <form className="w-full max-w-lg">
           <div className="w-full mb-6">
-          
+          <label>Prompt?</label>
             <input
               className="w-full mb-6"
               name="grid-first-name"
-              style={{color:"black"}}
+              style={{color:"black", width:"400px"}}
               type="text"
               placeholder="Set your prompt..."
               onChange={(e) => {
                 setPrompt(e.target.value)
               }}
+              value={"'love is art, art is love' is dope!"}
             />
           </div>
           </form>
@@ -1703,12 +1724,14 @@ let ingredient = "Burn # " + idx.toString()
 
           const otherMints = relevantMints.filter(
             c => {
+              try {
               // not explicitly selected
               return !Object.values(explicitMints).find(m => m.equals(c.mint))
                 // or implicitly assigned to another group
                 && !Object.values(implicitMints).find(m => m?.equals(c.mint))
                 // and matches the ingredient
                 && c.ingredients.find(i => i === ingredient);
+              } catch (err){}
             });
           let imgStyle: React.CSSProperties;
           if (dishIngredient || selectedMint) {

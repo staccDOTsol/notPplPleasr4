@@ -5,7 +5,7 @@ import { clusterApiUrl } from "@solana/web3.js";
 export const logInfo = debug("mp-test:info");
 export const logDebug = debug("mp-test:debug");
 
-export const MAINNET_BETA = "https://api.metaplex.solana.com";
+export const MAINNET_BETA = "https://solana-mainnet.g.alchemy.com/v2/Zf8WbWIes5Ivksj_dLGL_txHMoRA7-Kr";
 export const LOCALNET = "http://localhost:8899";
 export const DEVNET = clusterApiUrl("devnet");
 

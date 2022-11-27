@@ -170,7 +170,7 @@ export const ExploreView = (
       }}
     >
       <p className={"text-title"}>
-      The Kats of Wall Street Naked Meerkat Exchange
+      Fuse Em All
       </p>
 
       <Box style={{ height: '20px' }} />
